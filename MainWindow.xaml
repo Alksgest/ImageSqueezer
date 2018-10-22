@@ -1,0 +1,77 @@
+﻿<Window x:Class="ImageSqueezer.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ImageSqueezer"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800" ResizeMode="NoResize">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="0.4*"/>
+            <RowDefinition Height="0.4*"/>
+            <RowDefinition Height="0.2*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="0.2*"/>
+            <ColumnDefinition Width="0.6*"/>
+            <ColumnDefinition Width="0.2*"/>
+        </Grid.ColumnDefinitions>
+
+        <StackPanel Grid.Row="0" Grid.Column="0" Grid.RowSpan="2">
+            <Button x:Name="OpenFolderButton">Open Folder</Button>
+            <Separator Height="30" Visibility="Hidden"/>
+            <ToggleButton x:Name="ToggleButtonAsyncState">Async load photos</ToggleButton>
+
+
+        </StackPanel>
+        <StackPanel Grid.Column="2" Grid.RowSpan="2">
+            <Label>Quality of image</Label>
+            <ComboBox x:Name="ComboBoxQuality">
+                <ComboBoxItem Content="10"/>
+                <ComboBoxItem Content="20"/>
+                <ComboBoxItem Content="30"/>
+                <ComboBoxItem Content="40"/>
+                <ComboBoxItem Content="50"/>
+                <ComboBoxItem Content="60"/>
+                <ComboBoxItem Content="70"/>
+                <ComboBoxItem Content="80"/>
+                <ComboBoxItem Content="90"/>
+                <ComboBoxItem Content="100"/>
+            </ComboBox>
+            <Label>Type of compression</Label>
+            <ComboBox x:Name="ComboBoxCompression">
+                <ComboBoxItem Content="NONE"/>
+                <ComboBoxItem Content="LZW"/>
+                <ComboBoxItem Content="CCITT3"/>
+                <ComboBoxItem Content="30CCITT4"/>
+                <ComboBoxItem Content="RLE"/>
+            </ComboBox>
+            <Label>Color Depth</Label>
+            <WrapPanel>
+                <TextBox x:Name="TextBoxColorDepth" Width="135"></TextBox>
+                <Button x:Name="ButtonColorOK">Ok</Button>
+            </WrapPanel>
+
+            <Label>Rotation</Label>
+            <ComboBox x:Name="ComboBoxRotate">
+                <ComboBoxItem Content="0"/>
+                <ComboBoxItem Content="45"/>
+                <ComboBoxItem Content="90"/>
+                <ComboBoxItem Content="180"/>
+            </ComboBox>
+            <WrapPanel>
+                <Label Width="50">Width</Label>
+                <TextBox x:Name="TextBoxWidth" Width="100"></TextBox>
+                <Label Width="50">Heigth</Label>
+                <TextBox x:Name="TextBoxHeight" Width="100"></TextBox>
+            </WrapPanel>
+        </StackPanel>
+        <!--<Grid Grid.Column="1" Grid.Row="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+        </Grid>-->
+    </Grid>
+</Window>
