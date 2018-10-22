@@ -16,6 +16,7 @@ using System.Text.RegularExpressions;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using Microsoft.Win32;
 
 namespace ImageSqueezer
 {
@@ -24,107 +25,56 @@ namespace ImageSqueezer
     /// </summary>
     public partial class MainWindow : Window
     {
-        private Encoder ImageQualityEncoder;
-        private Encoder CompressionTypeEcnoder;
-        private Encoder ColorDepthEncoder;
-        private Encoder TransformationEncoder;
-
-        private EncoderParameters EncoderParemeters;
-
-        private Bitmap BitmapBuffer;
-
-        private int ImageWidth = 0;
-        private int ImageHeight = 0;
-
-        private List<string> TypeOfCompression = new List<string>
-        {
-            "CompressionNONE",
-            "CompressionLZW",
-            "CompressionCCITT3",
-            "CompressionCCITT4",
-            "CompressionRLE"
-        };
-        private List<string> TypeOfTransformation = new List<string>
-        {
-            "TransformFlipHorizontal",
-            "TransformFlipVertical",
-            "TransformRotate90",
-            "TransformRotate180",
-            "TransformRotate270",
-        };
+        private ImageWorker ImageWorker;
+        private string CurrentFile;
         public MainWindow()
         {
             InitializeComponent();
             TextBoxColorDepth.PreviewTextInput += TextBoxNumberValidation;
             TextBoxHeight.PreviewTextInput += TextBoxNumberValidation;
             TextBoxWidth.PreviewTextInput += TextBoxNumberValidation;
-        }
-        private EncoderValue? GetCompressionType(long? compression)
-        {
-            return (EncoderValue)compression;
-        }
 
-        private void SetParametres(int? quality, long? compression, long? colorDepth, long? transform, int? width, int? height)
-        {
-            quality = quality ?? 100;
-            EncoderValue compressionEncoder = GetCompressionType(compression) ?? EncoderValue.CompressionNone;
-            colorDepth = colorDepth ?? 4L;
-            ImageWidth = width ?? BitmapBuffer.Width;
-            ImageHeight = height ?? BitmapBuffer.Height;
+            ImageWorker = new ImageWorker();
 
-            SetEncoders();
-
-            if (transform == null)
-            {
-                EncoderParameter[] parametres =
-                {
-                new EncoderParameter(ImageQualityEncoder, quality.Value),
-                new EncoderParameter(CompressionTypeEcnoder, (long)compressionEncoder),
-                new EncoderParameter(ColorDepthEncoder, colorDepth.Value),
-                };
-                EncoderParemeters.Param = parametres;
-            }
-            else
-            {
-                EncoderValue transformEncoder = (EncoderValue)transform;
-                EncoderParameter[] parametres =
-                {
-                new EncoderParameter(ImageQualityEncoder, quality.Value),
-                new EncoderParameter(CompressionTypeEcnoder, (long)compressionEncoder),
-                new EncoderParameter(ColorDepthEncoder, colorDepth.Value),
-                new EncoderParameter(TransformationEncoder, (long)transformEncoder)
-                };
-            }
+            BitmapImage bitmapImage = new BitmapImage();
         }
 
-        private void SetEncoders()
-        {
-            ImageQualityEncoder = Encoder.Quality;
-            CompressionTypeEcnoder = Encoder.Compression;
-            ColorDepthEncoder = Encoder.ColorDepth;
-            TransformationEncoder = Encoder.Transformation;
-        }
-
-        private Bitmap ApplySettings(Bitmap bitmap, string inFilePath, string outFilePath)
-        {
-            Bitmap result = new Bitmap(bitmap, ImageWidth, ImageHeight);
-            result.Save(outFilePath, GetCodecInfo(inFilePath), EncoderParemeters);
-            return result;
-        }
         private void TextBoxNumberValidation(object sender, TextCompositionEventArgs e)
         {
             Regex regex = new Regex("[^0-9]+");
             e.Handled = regex.IsMatch(e.Text);
         }
-        private ImageCodecInfo GetCodecInfo(string path)
+
+        private void ButtonApply_Click(object sender, RoutedEventArgs e)
         {
-            FileInfo fileInfo = new FileInfo(path);
-            if (fileInfo.Exists)
+            Int32.TryParse(ComboBoxQuality.Text, out int quality);
+            Int64.TryParse(ComboBoxCompression.Text, out long compression);
+            Int64.TryParse(TextBoxColorDepth.Text, out long colorDepth);
+            Int64.TryParse(ComboBoxTransform.Text, out long transform);
+
+            Int32.TryParse(TextBoxWidth.Text, out int width);
+            Int32.TryParse(TextBoxHeight.Text, out int height);
+
+            ImageWorker.SetParametres(quality, compression, colorDepth, transform, width, height);
+        }
+
+        private void ButtonOpenFile_Click(object sender, RoutedEventArgs e)
+        {
+            OpenFileDialog dialog = new OpenFileDialog();
+            if(dialog.ShowDialog() == true)
             {
-                string encoderInfoString = @"image/";
-                encoderInfoString += fileInfo.Extension;
+                CurrentFile = dialog.FileName;
             }
-            return null;
+        }
+
+        private void ToggleButtonAsyncState_Checked(object sender, RoutedEventArgs e)
+        {
+            return;
+        }
+
+        private void ButtonHandleImages_Click(object sender, RoutedEventArgs e)
+        {
+            ImageWorker.DoWork(CurrentFile);
         }
     }
 }

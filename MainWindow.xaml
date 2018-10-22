@@ -21,11 +21,15 @@
         <StackPanel Grid.Row="0" Grid.Column="0" Grid.RowSpan="2">
             <Button x:Name="OpenFolderButton">Open Folder</Button>
             <Separator Height="30" Visibility="Hidden"/>
-            <ToggleButton x:Name="ToggleButtonAsyncState">Async load photos</ToggleButton>
+            <Button x:Name="ButtonOpenFile" Click="ButtonOpenFile_Click">Open File</Button>
+            <Separator Height="30" Visibility="Hidden"/>
+            <Button x:Name="ButtonHandleImages" Click="ButtonHandleImages_Click">Go!</Button>
+            <Separator Height="30" Visibility="Hidden"/>
+            <ToggleButton x:Name="ToggleButtonAsyncState" Checked="ToggleButtonAsyncState_Checked">Async load photos</ToggleButton>
 
 
         </StackPanel>
-        <StackPanel Grid.Column="2" Grid.RowSpan="2">
+        <StackPanel Grid.Column="2" Grid.RowSpan="2" Margin="10, 0, 10, 0">
             <Label>Quality of image</Label>
             <ComboBox x:Name="ComboBoxQuality">
                 <ComboBoxItem Content="10"/>
@@ -49,24 +53,27 @@
             </ComboBox>
             <Label>Color Depth</Label>
             <WrapPanel>
-                <TextBox x:Name="TextBoxColorDepth" Width="135"></TextBox>
-                <Button x:Name="ButtonColorOK">Ok</Button>
+                <TextBox x:Name="TextBoxColorDepth" Width="139"></TextBox>
             </WrapPanel>
 
             <Label>Rotation</Label>
-            <ComboBox x:Name="ComboBoxRotate">
+            <ComboBox x:Name="ComboBoxTransform">
                 <ComboBoxItem Content="0"/>
                 <ComboBoxItem Content="45"/>
                 <ComboBoxItem Content="90"/>
                 <ComboBoxItem Content="180"/>
             </ComboBox>
-            <WrapPanel>
+            <WrapPanel Margin="0, 10, 0, 0">
                 <Label Width="50">Width</Label>
-                <TextBox x:Name="TextBoxWidth" Width="100"></TextBox>
+                <TextBox x:Name="TextBoxWidth" Width="80"></TextBox>
                 <Label Width="50">Heigth</Label>
-                <TextBox x:Name="TextBoxHeight" Width="100"></TextBox>
+                <TextBox x:Name="TextBoxHeight" Width="80"></TextBox>
             </WrapPanel>
+            <Button x:Name="ButtonApply" Margin="0, 10, 0, 0" Click="ButtonApply_Click">Apply</Button>
         </StackPanel>
+        <ListView Grid.Column="1" Grid.Row="2">
+            
+        </ListView>
         <!--<Grid Grid.Column="1" Grid.Row="3">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition/>
