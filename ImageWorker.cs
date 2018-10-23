@@ -113,7 +113,6 @@ namespace ImageSqueezer
                 new EncoderParameter(CompressionTypeEcnoder, (long)GetCompressionFromString(compression)),
                 new EncoderParameter(ColorDepthEncoder, colorDepth),
                 new EncoderParameter(TransformationEncoder, (long)GetTypeOfTransformation(transform))
-
                 };
                 EncoderParemeters.Param = parametres;
             }
@@ -180,7 +179,6 @@ namespace ImageSqueezer
             return null;
         }
         private BitmapImage ToBitmapImage(Bitmap bitmap)
-
         {
             using (var outStream = new MemoryStream())
             {

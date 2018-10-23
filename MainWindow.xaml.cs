@@ -44,6 +44,7 @@ namespace ImageSqueezer
             TextBoxColorDepth.PreviewTextInput += TextBoxNumberValidation;
             TextBoxHeight.PreviewTextInput += TextBoxNumberValidation;
             TextBoxWidth.PreviewTextInput += TextBoxNumberValidation;
+
         }
 
         private void LoadSettings()
