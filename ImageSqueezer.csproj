@@ -38,7 +38,10 @@
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
+<<<<<<< HEAD
     <Reference Include="System.Windows.Forms" />
+=======
+>>>>>>> c3135a50e63691ecec54f089d75ec720cb6fa469
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -65,7 +68,10 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+<<<<<<< HEAD
     <Compile Include="ImageRepresenter.cs" />
+=======
+>>>>>>> c3135a50e63691ecec54f089d75ec720cb6fa469
     <Compile Include="ImageWorker.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
