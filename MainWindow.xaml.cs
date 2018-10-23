@@ -16,6 +16,8 @@ using System.Text.RegularExpressions;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using Microsoft.Win32;
+using System.Threading;
 
 namespace ImageSqueezer
 {
@@ -24,107 +26,115 @@ namespace ImageSqueezer
     /// </summary>
     public partial class MainWindow : Window
     {
-        private Encoder ImageQualityEncoder;
-        private Encoder CompressionTypeEcnoder;
-        private Encoder ColorDepthEncoder;
-        private Encoder TransformationEncoder;
-
-        private EncoderParameters EncoderParemeters;
-
-        private Bitmap BitmapBuffer;
-
-        private int ImageWidth = 0;
-        private int ImageHeight = 0;
-
-        private List<string> TypeOfCompression = new List<string>
-        {
-            "CompressionNONE",
-            "CompressionLZW",
-            "CompressionCCITT3",
-            "CompressionCCITT4",
-            "CompressionRLE"
-        };
-        private List<string> TypeOfTransformation = new List<string>
-        {
-            "TransformFlipHorizontal",
-            "TransformFlipVertical",
-            "TransformRotate90",
-            "TransformRotate180",
-            "TransformRotate270",
-        };
+        private ImageWorker ImageWorker;
+        private string CurrentFile;
+        private List<string> ImageList = new List<string>();
         public MainWindow()
         {
             InitializeComponent();
+            RegisterOnEvents();
+
+            LoadSettings();
+
+            ImageWorker = new ImageWorker();
+            BitmapImage bitmapImage = new BitmapImage();
+        }
+        private void RegisterOnEvents()
+        {
             TextBoxColorDepth.PreviewTextInput += TextBoxNumberValidation;
             TextBoxHeight.PreviewTextInput += TextBoxNumberValidation;
             TextBoxWidth.PreviewTextInput += TextBoxNumberValidation;
+
         }
-        private EncoderValue? GetCompressionType(long? compression)
+
+        private void LoadSettings()
         {
-            return (EncoderValue)compression;
         }
 
-        private void SetParametres(int? quality, long? compression, long? colorDepth, long? transform, int? width, int? height)
-        {
-            quality = quality ?? 100;
-            EncoderValue compressionEncoder = GetCompressionType(compression) ?? EncoderValue.CompressionNone;
-            colorDepth = colorDepth ?? 4L;
-            ImageWidth = width ?? BitmapBuffer.Width;
-            ImageHeight = height ?? BitmapBuffer.Height;
 
-            SetEncoders();
-
-            if (transform == null)
-            {
-                EncoderParameter[] parametres =
-                {
-                new EncoderParameter(ImageQualityEncoder, quality.Value),
-                new EncoderParameter(CompressionTypeEcnoder, (long)compressionEncoder),
-                new EncoderParameter(ColorDepthEncoder, colorDepth.Value),
-                };
-                EncoderParemeters.Param = parametres;
-            }
-            else
-            {
-                EncoderValue transformEncoder = (EncoderValue)transform;
-                EncoderParameter[] parametres =
-                {
-                new EncoderParameter(ImageQualityEncoder, quality.Value),
-                new EncoderParameter(CompressionTypeEcnoder, (long)compressionEncoder),
-                new EncoderParameter(ColorDepthEncoder, colorDepth.Value),
-                new EncoderParameter(TransformationEncoder, (long)transformEncoder)
-                };
-            }
-        }
-
-        private void SetEncoders()
-        {
-            ImageQualityEncoder = Encoder.Quality;
-            CompressionTypeEcnoder = Encoder.Compression;
-            ColorDepthEncoder = Encoder.ColorDepth;
-            TransformationEncoder = Encoder.Transformation;
-        }
-
-        private Bitmap ApplySettings(Bitmap bitmap, string inFilePath, string outFilePath)
-        {
-            Bitmap result = new Bitmap(bitmap, ImageWidth, ImageHeight);
-            result.Save(outFilePath, GetCodecInfo(inFilePath), EncoderParemeters);
-            return result;
-        }
         private void TextBoxNumberValidation(object sender, TextCompositionEventArgs e)
         {
             Regex regex = new Regex("[^0-9]+");
             e.Handled = regex.IsMatch(e.Text);
         }
-        private ImageCodecInfo GetCodecInfo(string path)
+
+        private void ButtonApply_Click(object sender, RoutedEventArgs e) => ApplySettings();
+
+        private void ApplySettings()
         {
-            FileInfo fileInfo = new FileInfo(path);
-            if (fileInfo.Exists)
+            Int32.TryParse(ComboBoxQuality.Text, out int quality);
+            string compression = ComboBoxCompression.Text;
+            Int64.TryParse(TextBoxColorDepth.Text, out long colorDepth);
+            Int64.TryParse(ComboBoxTransform.Text, out long transform);
+            Int32.TryParse(TextBoxWidth.Text, out int width);
+            Int32.TryParse(TextBoxHeight.Text, out int height);
+
+            ImageWorker.SetParametres(quality, compression, colorDepth, transform, width, height);
+
+            SaveSettings(quality, compression, colorDepth, transform, width, height);
+        }
+
+        private static void SaveSettings(int quality, string compression, long colorDepth, long transform, int width, int height)
+        {
+            Properties.Settings.Default.Quality = quality;
+            Properties.Settings.Default.Compression = compression;
+            Properties.Settings.Default.ColorDepth = colorDepth;
+            Properties.Settings.Default.Transform = transform;
+            Properties.Settings.Default.Width = width;
+            Properties.Settings.Default.Height = height;
+
+            Properties.Settings.Default.Save();
+        }
+
+        private void ButtonOpenFile_Click(object sender, RoutedEventArgs e) => OpenFile();
+        private void OpenFolderButton_Click(object sender, RoutedEventArgs e) => OpenFolder();
+
+        private void OpenFile()
+        {
+            OpenFileDialog dialog = new OpenFileDialog();
+            if (dialog.ShowDialog() == true)
             {
-                string encoderInfoString = @"image/";
-                encoderInfoString += fileInfo.Extension;
+                CurrentFile = dialog.FileName;
             }
-            return null;
+            ListViewHandledImages.Items.Clear();
+            ListViewHandledImages.Items.Add(new ImageRepresenter(CurrentFile));
+
+            ImageList = new List<string> { CurrentFile };
+        }
+        private void ButtonHandleImages_Click(object sender, RoutedEventArgs e)
+        {
+            if (ImageList.Count == 0)
+                return;
+
+            foreach (var file in ImageList)
+                if (ToggleButtonAsyncState.IsChecked.Value)
+                    ThreadPool.QueueUserWorkItem(ImageWorker.DoWork, file);
+                else
+                    ImageWorker.DoWork(file);
+        }
+
+        private void OpenFolder()
+        {
+            using (var dialog = new System.Windows.Forms.FolderBrowserDialog())
+            {
+                if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    ListViewHandledImages.Items.Clear();
+
+                    ImageList = Directory.EnumerateFiles(dialog.SelectedPath, "*.*", SearchOption.TopDirectoryOnly)
+                               .Where(fileName =>
+                               {
+                                   fileName = fileName.ToLower();
+                                   return fileName.EndsWith(".jpg") || fileName.EndsWith(".jpeg") || fileName.EndsWith(".png") ||
+                                            fileName.EndsWith(".gif") || fileName.EndsWith(".jpe") || fileName.EndsWith(".jfif") ||
+                                            fileName.EndsWith(".bmp") || fileName.EndsWith(".dib") || fileName.EndsWith(".rle") ||
+                                            fileName.EndsWith(".tiff") || fileName.EndsWith(".tif");
+                               }).ToList();
+
+                    foreach (var str in ImageList)
+                        ListViewHandledImages.Items.Add(new ImageRepresenter(str));
+                }
+            }
         }
     }
 }

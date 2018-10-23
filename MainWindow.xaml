@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ImageSqueezer"
+        xmlns:col="clr-namespace:System.Collections;assembly=mscorlib"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800" ResizeMode="NoResize">
     <Grid>
@@ -18,16 +19,22 @@
             <ColumnDefinition Width="0.2*"/>
         </Grid.ColumnDefinitions>
 
-        <StackPanel Grid.Row="0" Grid.Column="0" Grid.RowSpan="2">
-            <Button x:Name="OpenFolderButton">Open Folder</Button>
+        <StackPanel Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Margin="10, 10, 10, 10">
+            <Button x:Name="OpenFolderButton" Click="OpenFolderButton_Click">Open Folder</Button>
+            <Button x:Name="ButtonOpenFile" Click="ButtonOpenFile_Click">Open File</Button>
             <Separator Height="30" Visibility="Hidden"/>
-            <ToggleButton x:Name="ToggleButtonAsyncState">Async load photos</ToggleButton>
-
-
+            <Button x:Name="ButtonHandleImages" Click="ButtonHandleImages_Click">Start encoding</Button>
+            <Separator Height="30" Visibility="Hidden"/>
         </StackPanel>
-        <StackPanel Grid.Column="2" Grid.RowSpan="2">
+        
+        <StackPanel Grid.Row="2" Grid.Column="0" Margin="10, 10, 10, 10">
+            <ToggleButton x:Name="ToggleButtonAsyncState">Async load photos</ToggleButton>
+        </StackPanel>
+        
+        <StackPanel Grid.Column="2" Grid.RowSpan="2" Margin="10, 0, 10, 10">
             <Label>Quality of image</Label>
             <ComboBox x:Name="ComboBoxQuality">
+                <ComboBoxItem Content="0"/>
                 <ComboBoxItem Content="10"/>
                 <ComboBoxItem Content="20"/>
                 <ComboBoxItem Content="30"/>
@@ -44,29 +51,44 @@
                 <ComboBoxItem Content="NONE"/>
                 <ComboBoxItem Content="LZW"/>
                 <ComboBoxItem Content="CCITT3"/>
-                <ComboBoxItem Content="30CCITT4"/>
+                <ComboBoxItem Content="CCITT4"/>
                 <ComboBoxItem Content="RLE"/>
             </ComboBox>
             <Label>Color Depth</Label>
             <WrapPanel>
-                <TextBox x:Name="TextBoxColorDepth" Width="135"></TextBox>
-                <Button x:Name="ButtonColorOK">Ok</Button>
+                <TextBox x:Name="TextBoxColorDepth" Width="130"></TextBox>
             </WrapPanel>
 
             <Label>Rotation</Label>
-            <ComboBox x:Name="ComboBoxRotate">
+            <ComboBox x:Name="ComboBoxTransform">
                 <ComboBoxItem Content="0"/>
-                <ComboBoxItem Content="45"/>
                 <ComboBoxItem Content="90"/>
                 <ComboBoxItem Content="180"/>
+                <ComboBoxItem Content="270"/>
             </ComboBox>
-            <WrapPanel>
+            <WrapPanel Margin="0, 10, 0, 0">
                 <Label Width="50">Width</Label>
-                <TextBox x:Name="TextBoxWidth" Width="100"></TextBox>
+                <TextBox x:Name="TextBoxWidth" Width="80"></TextBox>
                 <Label Width="50">Heigth</Label>
-                <TextBox x:Name="TextBoxHeight" Width="100"></TextBox>
+                <TextBox x:Name="TextBoxHeight" Width="80"></TextBox>
             </WrapPanel>
+            <Button x:Name="ButtonApply" Margin="10, 10, 10, 10" Click="ButtonApply_Click" ToolTip="Apply settings for image">Apply</Button>
         </StackPanel>
+        <ListView x:Name="ListViewHandledImages" Grid.Column="1" Grid.Row="1" Grid.RowSpan="2" Margin="10, 10, 10, 10" ScrollViewer.VerticalScrollBarVisibility="Visible">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn DisplayMemberBinding="{Binding Path=Title}" Width="350">Title</GridViewColumn>
+                    <GridViewColumn DisplayMemberBinding="{Binding Path=StringSize}" Width="70">Size</GridViewColumn>
+                </GridView>
+            </ListView.View>
+        </ListView>
+        <TextBlock Grid.Column="2" Grid.Row="2" Margin="10, 10, 10, 10" FontSize="11">
+            <Run>Some parametres may not</Run>
+            <LineBreak/>
+            <Run>work with different formats</Run>
+            <LineBreak/>
+            <Run>of pictures.</Run>
+        </TextBlock>
         <!--<Grid Grid.Column="1" Grid.Row="3">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition/>
