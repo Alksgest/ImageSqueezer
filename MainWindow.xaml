@@ -31,9 +31,17 @@
             <ToggleButton x:Name="ToggleButtonAsyncState">Async load photos</ToggleButton>
         </StackPanel>
         
-        <StackPanel Grid.Column="2" Grid.RowSpan="2" Margin="10, 0, 10, 10">
+        <StackPanel Grid.Column="2" Grid.RowSpan="3" Margin="10, 0, 10, 10">
+            <Label>Type of encoder</Label>
+            <ComboBox x:Name="ComboBoxTypeOfEncoders">
+                <ComboBoxItem Content="JPEG"/>
+                <ComboBoxItem Content="TIFF"/>
+                <ComboBoxItem Content="PNG"/>
+                <ComboBoxItem Content="GIF"/>
+                <ComboBoxItem Content="BMP"/>
+            </ComboBox>
             <Label>Quality of image</Label>
-            <ComboBox x:Name="ComboBoxQuality">
+            <ComboBox x:Name="ComboBoxQuality" IsEnabled="False" SelectedIndex="10">
                 <ComboBoxItem Content="0"/>
                 <ComboBoxItem Content="10"/>
                 <ComboBoxItem Content="20"/>
@@ -47,7 +55,7 @@
                 <ComboBoxItem Content="100"/>
             </ComboBox>
             <Label>Type of compression</Label>
-            <ComboBox x:Name="ComboBoxCompression">
+            <ComboBox x:Name="ComboBoxCompression" IsEnabled="False" SelectedIndex="0">
                 <ComboBoxItem Content="NONE"/>
                 <ComboBoxItem Content="LZW"/>
                 <ComboBoxItem Content="CCITT3"/>
@@ -56,11 +64,11 @@
             </ComboBox>
             <Label>Color Depth</Label>
             <WrapPanel>
-                <TextBox x:Name="TextBoxColorDepth" Width="130"></TextBox>
+                <TextBox x:Name="TextBoxColorDepth" Width="130" IsEnabled="False"></TextBox>
             </WrapPanel>
 
-            <Label>Rotation</Label>
-            <ComboBox x:Name="ComboBoxTransform">
+            <Label>Transformation</Label>
+            <ComboBox x:Name="ComboBoxTransform" IsEnabled="False" SelectedIndex="0">
                 <ComboBoxItem Content="0"/>
                 <ComboBoxItem Content="90"/>
                 <ComboBoxItem Content="180"/>
@@ -68,9 +76,9 @@
             </ComboBox>
             <WrapPanel Margin="0, 10, 0, 0">
                 <Label Width="50">Width</Label>
-                <TextBox x:Name="TextBoxWidth" Width="80"></TextBox>
+                <TextBox x:Name="TextBoxWidth" Width="80" IsEnabled="False"></TextBox>
                 <Label Width="50">Heigth</Label>
-                <TextBox x:Name="TextBoxHeight" Width="80"></TextBox>
+                <TextBox x:Name="TextBoxHeight" Width="80" IsEnabled="False"></TextBox>
             </WrapPanel>
             <Button x:Name="ButtonApply" Margin="10, 10, 10, 10" Click="ButtonApply_Click" ToolTip="Apply settings for image">Apply</Button>
         </StackPanel>
@@ -82,13 +90,13 @@
                 </GridView>
             </ListView.View>
         </ListView>
-        <TextBlock Grid.Column="2" Grid.Row="2" Margin="10, 10, 10, 10" FontSize="11">
+        <!--<TextBlock Grid.Column="2" Grid.Row="2" Margin="10, 10, 10, 10" FontSize="11">
             <Run>Some parametres may not</Run>
             <LineBreak/>
             <Run>work with different formats</Run>
             <LineBreak/>
             <Run>of pictures.</Run>
-        </TextBlock>
+        </TextBlock>-->
         <!--<Grid Grid.Column="1" Grid.Row="3">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition/>

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -60,15 +61,15 @@ namespace ImageSqueezer
         {
             switch (compression)
             {
-                case "CompressionNONE":
+                case "NONE":
                     return EncoderValue.CompressionNone;
-                case "CompressionLZW":
+                case "LZW":
                     return EncoderValue.CompressionLZW;
-                case "CompressionCCITT3":
+                case "CCITT3":
                     return EncoderValue.CompressionCCITT3;
-                case "CompressionCCITT4":
+                case "CCITT4":
                     return EncoderValue.CompressionCCITT4;
-                case "CompressionRLE":
+                case "RLE":
                     return EncoderValue.CompressionRle;
             }
             return EncoderValue.CompressionNone;
@@ -83,7 +84,7 @@ namespace ImageSqueezer
         {
             SetEncoders();
         }
-        public void SetParametres(int quality, string compression, long colorDepth, long transform, int width, int height)
+        public void SetParametres(long quality, string compression, long colorDepth, long transform, int width, int height)
         {
             colorDepth = colorDepth == 0 ? 4L : colorDepth;
 
@@ -112,52 +113,57 @@ namespace ImageSqueezer
                 new EncoderParameter(ImageQualityEncoder, quality),
                 new EncoderParameter(CompressionTypeEcnoder, (long)GetCompressionFromString(compression)),
                 new EncoderParameter(ColorDepthEncoder, colorDepth),
-                new EncoderParameter(TransformationEncoder, (long)GetTypeOfTransformation(transform))
+                new EncoderParameter(TransformationEncoder, (long)EncoderValue.TransformRotate180) //(long)GetTypeOfTransformation(transform)
                 };
                 EncoderParemeters.Param = parametres;
             }
         }
         static Mutex doWorkMutex = new Mutex();
-        public void DoWork(object InPath)
+        public void DoWork(object parametres)
         {
             doWorkMutex.WaitOne();
-            string inPath = (string)InPath;
-
-            var fileInfo = new FileInfo(inPath);
-            if (!Directory.Exists(fileInfo.DirectoryName + @"\" + "Converted"))
-                Directory.CreateDirectory(fileInfo.DirectoryName + @"\" + "Converted");
-
-            string outPath = fileInfo.DirectoryName + @"\" + "Converted" + @"\" + fileInfo.Name + "_converted" + fileInfo.Extension;
-
-            var splitedPath = inPath.Split('.');
-            var codecInfo = GetCodecInfo(splitedPath[splitedPath.Length - 1]);
-
-
-            using (Bitmap currentImage = new Bitmap(inPath))
+            if (parametres is IEnumerable<string>)
             {
-                ImageWidth = ImageWidth == 0 ? currentImage.Width : ImageWidth;
-                ImageHeight = ImageHeight == 0 ? currentImage.Height : ImageHeight;
-                try
-                {
+                var list = parametres as List<string>;
+                string inPath = list[0];
 
-                    using (BitmapBuffer = new Bitmap(currentImage, ImageWidth, ImageHeight))
+                var fileInfo = new FileInfo(inPath);
+                if (!Directory.Exists(fileInfo.DirectoryName + @"\" + "Converted"))
+                    Directory.CreateDirectory(fileInfo.DirectoryName + @"\" + "Converted");
+
+                string outPath = fileInfo.DirectoryName + @"\" + "Converted" + @"\" + fileInfo.Name + "_converted" + fileInfo.Extension;
+
+                var splitedPath = inPath.Split('.');
+                var codecInfo = GetCodecInfo(splitedPath[splitedPath.Length - 1], list[1]);
+
+
+                using (Bitmap currentImage = new Bitmap(inPath))
+                {
+                    ImageWidth = ImageWidth == 0 ? currentImage.Width : ImageWidth;
+                    ImageHeight = ImageHeight == 0 ? currentImage.Height : ImageHeight;
+                    try
                     {
-                        BitmapBuffer.Save(outPath, codecInfo, EncoderParemeters);
+                        using (BitmapBuffer = new Bitmap(currentImage, ImageWidth, ImageHeight))
+                        {
+                            BitmapBuffer.Save(outPath, codecInfo, EncoderParemeters);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        LogErrors(e.Message);
+                    }
+
+
+                    if (!isSizeSetted)
+                    {
+                        ImageWidth = 0;
+                        ImageHeight = 0;
                     }
                 }
-                catch (Exception e)
-                {
-                    LogErrors(e.Message);
-                }
-
-
-                if (!isSizeSetted)
-                {
-                    ImageWidth = 0;
-                    ImageHeight = 0;
-                }
+                doWorkMutex.ReleaseMutex();
             }
-            doWorkMutex.ReleaseMutex();
+            else
+                doWorkMutex.ReleaseMutex();
         }
 
         private void SetEncoders()
@@ -168,13 +174,25 @@ namespace ImageSqueezer
             TransformationEncoder = Encoder.Transformation;            
         }
 
-        private ImageCodecInfo GetCodecInfo(string extention)
-        {
-            ImageCodecInfo[] codecInfo = ImageCodecInfo.GetImageEncoders();
-            for (int j = 0; j < codecInfo.Length; ++j)
+        private ImageCodecInfo GetCodecInfo(string extention, string codec)
+        {          
+            if (String.IsNullOrEmpty(codec))
             {
-                if (codecInfo[j].FilenameExtension.Contains(extention.ToUpper()))
-                    return codecInfo[j];
+                ImageCodecInfo[] codecInfo = ImageCodecInfo.GetImageEncoders();
+                for (int j = 0; j < codecInfo.Length; ++j)
+                {
+                    if (codecInfo[j].FilenameExtension.Contains(extention.ToUpper()))
+                        return codecInfo[j];
+                }
+            }
+            else
+            {
+                ImageCodecInfo[] codecInfo = ImageCodecInfo.GetImageEncoders();
+                for (int j = 0; j < codecInfo.Length; ++j)
+                {
+                    if (codecInfo[j].MimeType == codec)
+                        return codecInfo[j];
+                }
             }
             return null;
         }

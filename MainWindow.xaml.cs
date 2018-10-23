@@ -26,9 +26,20 @@ namespace ImageSqueezer
     /// </summary>
     public partial class MainWindow : Window
     {
+        public enum MainWindowEncoderState
+        {
+            JPEG = 0,
+            TIFF,
+            PNG, 
+            GIF, 
+            BMP,
+            NONE
+        }
         private ImageWorker ImageWorker;
         private string CurrentFile;
         private List<string> ImageList = new List<string>();
+        public MainWindowEncoderState MainState { get; private set; }
+        private string EncoderStateString = null;
         public MainWindow()
         {
             InitializeComponent();
@@ -36,6 +47,7 @@ namespace ImageSqueezer
 
             LoadSettings();
 
+            MainState = MainWindowEncoderState.NONE;
             ImageWorker = new ImageWorker();
             BitmapImage bitmapImage = new BitmapImage();
         }
@@ -44,8 +56,10 @@ namespace ImageSqueezer
             TextBoxColorDepth.PreviewTextInput += TextBoxNumberValidation;
             TextBoxHeight.PreviewTextInput += TextBoxNumberValidation;
             TextBoxWidth.PreviewTextInput += TextBoxNumberValidation;
-
+            ComboBoxTypeOfEncoders.SelectionChanged += ComboBoxTypeOfEncoders_SelectionChanged;
         }
+
+
 
         private void LoadSettings()
         {
@@ -62,7 +76,8 @@ namespace ImageSqueezer
 
         private void ApplySettings()
         {
-            Int32.TryParse(ComboBoxQuality.Text, out int quality);
+            //Color Depth - 1, 4, 8, 24;
+            Int64.TryParse(ComboBoxQuality.Text, out long quality);
             string compression = ComboBoxCompression.Text;
             Int64.TryParse(TextBoxColorDepth.Text, out long colorDepth);
             Int64.TryParse(ComboBoxTransform.Text, out long transform);
@@ -74,7 +89,7 @@ namespace ImageSqueezer
             SaveSettings(quality, compression, colorDepth, transform, width, height);
         }
 
-        private static void SaveSettings(int quality, string compression, long colorDepth, long transform, int width, int height)
+        private static void SaveSettings(long quality, string compression, long colorDepth, long transform, int width, int height)
         {
             Properties.Settings.Default.Quality = quality;
             Properties.Settings.Default.Compression = compression;
@@ -106,11 +121,24 @@ namespace ImageSqueezer
             if (ImageList.Count == 0)
                 return;
 
-            foreach (var file in ImageList)
-                if (ToggleButtonAsyncState.IsChecked.Value)
-                    ThreadPool.QueueUserWorkItem(ImageWorker.DoWork, file);
-                else
-                    ImageWorker.DoWork(file);
+
+
+            if (ToggleButtonAsyncState.IsChecked.Value)
+            {
+                foreach (var file in ImageList)
+                {
+                    List<string> list = new List<string> { file, EncoderStateString };
+                    ThreadPool.QueueUserWorkItem(ImageWorker.DoWork, list);
+                }
+            }
+            else
+            {
+                foreach (var file in ImageList)
+                {
+                    List<string> list = new List<string> { file, EncoderStateString };
+                    ImageWorker.DoWork(list);
+                }
+            }
         }
 
         private void OpenFolder()
@@ -135,6 +163,68 @@ namespace ImageSqueezer
                         ListViewHandledImages.Items.Add(new ImageRepresenter(str));
                 }
             }
+        }
+
+        private void ComboBoxTypeOfEncoders_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            MainWindowEncoderStateChanged();
+        }
+
+        private void MainWindowEncoderStateChanged()
+        {
+            LockControls();
+            switch ((MainWindowEncoderState)ComboBoxTypeOfEncoders.SelectedIndex)
+            {
+                case MainWindowEncoderState.JPEG:
+                    MainState = MainWindowEncoderState.JPEG;
+                    ComboBoxQuality.IsEnabled = true;
+                    ComboBoxTransform.IsEnabled = true;
+                    TextBoxWidth.IsEnabled = true;
+                    TextBoxHeight.IsEnabled = true;
+                    EncoderStateString = "image/jpeg";
+                    break;
+                case MainWindowEncoderState.TIFF:
+                    MainState = MainWindowEncoderState.TIFF;
+                    ComboBoxCompression.IsEnabled = true;
+                    TextBoxColorDepth.IsEnabled = true;
+                    TextBoxWidth.IsEnabled = true;
+                    TextBoxHeight.IsEnabled = true;
+                    EncoderStateString = "image/tiff";
+                    break;
+                case MainWindowEncoderState.PNG:
+                    MainState = MainWindowEncoderState.PNG;
+                    ComboBoxQuality.IsEnabled = true;
+                    TextBoxWidth.IsEnabled = true;
+                    TextBoxHeight.IsEnabled = true;
+                    EncoderStateString = "image/png";
+                    break;
+                case MainWindowEncoderState.GIF:
+                    MainState = MainWindowEncoderState.GIF;
+                    ComboBoxQuality.IsEnabled = true;
+                    TextBoxWidth.IsEnabled = true;
+                    TextBoxHeight.IsEnabled = true;
+                    EncoderStateString = "image/gif";
+                    break;
+                case MainWindowEncoderState.BMP:
+                    MainState = MainWindowEncoderState.BMP;
+                    ComboBoxQuality.IsEnabled = true;
+                    TextBoxWidth.IsEnabled = true;
+                    TextBoxHeight.IsEnabled = true;
+                    EncoderStateString = "image/bmp";
+                    break;
+                default:
+                    MainState = MainWindowEncoderState.NONE;
+                    break;
+            }
+        }
+        private void LockControls()
+        {
+            ComboBoxQuality.IsEnabled = false;
+            ComboBoxCompression.IsEnabled = false;
+            TextBoxColorDepth.IsEnabled = false;
+            ComboBoxTransform.IsEnabled = false;
+            TextBoxWidth.IsEnabled = false;
+            TextBoxHeight.IsEnabled = false;
         }
     }
 }
