@@ -51,6 +51,10 @@ namespace ImageSqueezer
                     return EncoderValue.TransformRotate180;
                 case 270:
                     return EncoderValue.TransformRotate270;
+                case 0:
+                    return EncoderValue.TransformFlipHorizontal;
+                case 1:
+                    return EncoderValue.TransformFlipVertical;
                 default:
                     break;
             }
@@ -152,7 +156,6 @@ namespace ImageSqueezer
                     {
                         LogErrors(e.Message);
                     }
-
 
                     if (!isSizeSetted)
                     {

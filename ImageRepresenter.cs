@@ -11,8 +11,9 @@ namespace ImageSqueezer
     {
         public string Title { get; set; }
         public string Path { get; set; }
-        public long Size { get; set; }
+        public double Size { get; set; }
         public string StringSize { get; set; }
+
         public ImageRepresenter(string path)
         {
             Path = path;
@@ -21,5 +22,6 @@ namespace ImageSqueezer
             Size = (info.Length / 1024);
             StringSize = Size.ToString() + "kb";
         }
+        public override string ToString() => Path;
     }
 }
