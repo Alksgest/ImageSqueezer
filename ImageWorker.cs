@@ -25,22 +25,7 @@ namespace ImageSqueezer
 
         private bool isSizeSetted = false;
 
-        //private List<string> TypeOfCompression = new List<string>
-        //{
-        //    "CompressionNONE",
-        //    "CompressionLZW",
-        //    "CompressionCCITT3",
-        //    "CompressionCCITT4",
-        //    "CompressionRLE"
-        //};
-        //private List<string> TypeOfTransformation = new List<string>
-        //{
-        //    "TransformFlipHorizontal",
-        //    "TransformFlipVertical",
-        //    "TransformRotate90",
-        //    "TransformRotate180",
-        //    "TransformRotate270",
-        //};
+        //getting 90, 180, 270 has logic values, getting flipping - 0, 1
         private EncoderValue GetTypeOfTransformation(long transform)
         {
             switch (transform)
@@ -117,7 +102,7 @@ namespace ImageSqueezer
                 new EncoderParameter(ImageQualityEncoder, quality),
                 new EncoderParameter(CompressionTypeEcnoder, (long)GetCompressionFromString(compression)),
                 new EncoderParameter(ColorDepthEncoder, colorDepth),
-                new EncoderParameter(TransformationEncoder, (long)EncoderValue.TransformRotate180) //(long)GetTypeOfTransformation(transform)
+                new EncoderParameter(TransformationEncoder, (long)GetTypeOfTransformation(transform)) //(long)GetTypeOfTransformation(transform)
                 };
                 EncoderParemeters.Param = parametres;
             }
