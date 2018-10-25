@@ -17,6 +17,8 @@ namespace ImageSqueezer
 
         private EncoderParameters EncoderParemeters;
 
+        public static readonly string LogFileName = "Errors.log";
+
         public Bitmap BitmapBuffer { get; private set; }
         public BitmapImage BitmapImageBuffer { get; private set; }
 
@@ -24,6 +26,55 @@ namespace ImageSqueezer
         private int ImageHeight = 0;
 
         private bool isSizeSetted = false;
+
+        
+
+        public ImageWorker(int quality, string compression, long colorDepth, long transform, int width, int height)
+        {
+            SetEncoders();
+            SetParametres(quality, compression, colorDepth, transform, width, height);
+            //creating log file 
+            CreateLogFile();
+        }
+        public ImageWorker()
+        {
+            SetEncoders();
+            CreateLogFile();
+        }
+        public void SetParametres(long quality, string compression, long colorDepth, long transform, int width, int height)
+        {
+            colorDepth = colorDepth == 0 ? 4L : colorDepth;
+
+            if (width != 0 || height != 0)
+                isSizeSetted = true;
+
+            ImageWidth = width;
+            ImageHeight = height;
+
+            if (transform == 0)
+            {
+                EncoderParemeters = new EncoderParameters(3);
+                EncoderParameter[] parametres = new EncoderParameter[]
+                {
+                new EncoderParameter(ImageQualityEncoder, quality),
+                new EncoderParameter(CompressionTypeEcnoder, (long)GetCompressionFromString(compression)),
+                new EncoderParameter(ColorDepthEncoder, colorDepth),
+                };
+                EncoderParemeters.Param = parametres;
+            }
+            else
+            {
+                EncoderParemeters = new EncoderParameters(4);
+                EncoderParameter[] parametres = new EncoderParameter[]
+                {
+                new EncoderParameter(ImageQualityEncoder, quality),
+                new EncoderParameter(CompressionTypeEcnoder, (long)GetCompressionFromString(compression)),
+                new EncoderParameter(ColorDepthEncoder, colorDepth),
+                new EncoderParameter(TransformationEncoder, (long)GetTypeOfTransformation(transform)) //(long)GetTypeOfTransformation(transform)
+                };
+                EncoderParemeters.Param = parametres;
+            }
+        }
 
         //getting 90, 180, 270 has logic values, getting flipping - 0, 1
         private EncoderValue GetTypeOfTransformation(long transform)
@@ -64,50 +115,7 @@ namespace ImageSqueezer
             return EncoderValue.CompressionNone;
         }
 
-        public ImageWorker(int quality, string compression, long colorDepth, long transform, int width, int height)
-        {
-            SetEncoders();
-            SetParametres(quality, compression, colorDepth, transform, width, height);
-        }
-        public ImageWorker()
-        {
-            SetEncoders();
-        }
-        public void SetParametres(long quality, string compression, long colorDepth, long transform, int width, int height)
-        {
-            colorDepth = colorDepth == 0 ? 4L : colorDepth;
-
-            if (width != 0 || height != 0)
-                isSizeSetted = true;
-
-            ImageWidth = width;
-            ImageHeight = height;
-
-            if (transform == 0)
-            {
-                EncoderParemeters = new EncoderParameters(3);
-                EncoderParameter[] parametres = new EncoderParameter[]
-                {
-                new EncoderParameter(ImageQualityEncoder, quality),
-                new EncoderParameter(CompressionTypeEcnoder, (long)GetCompressionFromString(compression)),
-                new EncoderParameter(ColorDepthEncoder, colorDepth),
-                };
-                EncoderParemeters.Param = parametres;
-            }
-            else
-            {
-                EncoderParemeters = new EncoderParameters(4);
-                EncoderParameter[] parametres = new EncoderParameter[]
-                {
-                new EncoderParameter(ImageQualityEncoder, quality),
-                new EncoderParameter(CompressionTypeEcnoder, (long)GetCompressionFromString(compression)),
-                new EncoderParameter(ColorDepthEncoder, colorDepth),
-                new EncoderParameter(TransformationEncoder, (long)GetTypeOfTransformation(transform)) //(long)GetTypeOfTransformation(transform)
-                };
-                EncoderParemeters.Param = parametres;
-            }
-        }
-        static Mutex doWorkMutex = new Mutex();
+        private static Mutex doWorkMutex = new Mutex();
         public void DoWork(object parametres)
         {
             doWorkMutex.WaitOne();
@@ -139,7 +147,7 @@ namespace ImageSqueezer
                     }
                     catch (Exception e)
                     {
-                        LogErrors(e.Message);
+                        LogErrors("Error : " + e.Message + "; " + DateTime.Now.ToString("dd/MM/yyyy hh:mm tt"));
                     }
 
                     if (!isSizeSetted)
@@ -213,12 +221,10 @@ namespace ImageSqueezer
                 return new Bitmap(bitmap);
             }
         }
-        static Mutex logErrorMutex = new Mutex();
+        private static Mutex logErrorMutex = new Mutex();
         void LogErrors(string error)
         {
             logErrorMutex.WaitOne();
-            if (!File.Exists("Errors.log"))
-                File.Create("Errors.log");
             using (FileStream stream = new FileStream("Errors.log", FileMode.Append, FileAccess.Write))
             {
                 using (StreamWriter writer = new StreamWriter(stream))
@@ -228,5 +234,12 @@ namespace ImageSqueezer
             }
             logErrorMutex.ReleaseMutex();
         }
+
+        private static void CreateLogFile()
+        {
+            if (!File.Exists(LogFileName))
+                File.Create(LogFileName);
+        }
+
     }
 }

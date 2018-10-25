@@ -60,19 +60,34 @@ namespace ImageSqueezer
             ListViewHandledImages.SelectionChanged += ListViewHandledImages_SelectionChanged;
         }
 
+        private static Mutex bitmapMutex = new Mutex();
         private void ListViewHandledImages_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            var uriPath = new Uri(((sender as ListView).SelectedItem as ImageRepresenter).Path);
+            ThreadPool.QueueUserWorkItem(UpdateOverviewImage, sender);         
+        }
 
-            var bitmap = new BitmapImage();
-            bitmap.BeginInit();
-            bitmap.UriSource = uriPath;
-            bitmap.DecodePixelWidth = (int)ImageOverview.Width;
-            bitmap.DecodePixelHeight = (int)ImageOverview.Height;
-            bitmap.EndInit();
+        private void UpdateOverviewImage(object sender)
+        {
+            this.Dispatcher.BeginInvoke((Action)(() =>
+            {
+                if ((sender as ListView).SelectedItem == null)
+                {
+                    ImageOverview.Source = null;
+                    return;
+                }
+                //bitmapMutex.WaitOne();
+                var uriPath = new Uri(((sender as ListView).SelectedItem as ImageRepresenter).Path);
 
-            ImageOverview.Source = bitmap;
+                var bitmap = new BitmapImage();
+                bitmap.BeginInit();
+                bitmap.UriSource = uriPath;
+                bitmap.DecodePixelWidth = (int)ImageOverview.Width;
+                bitmap.DecodePixelHeight = (int)ImageOverview.Height;
+                bitmap.EndInit();
+                ImageOverview.Source = bitmap;
 
+                //bitmapMutex.ReleaseMutex();
+            }));
         }
 
         private void LoadSettings()
@@ -153,16 +168,16 @@ namespace ImageSqueezer
             if (dialog.ShowDialog() == true)
             {
                 CurrentFile = dialog.FileName;
-            }
-            ListViewHandledImages.Items.Clear();
-            ListViewHandledImages.Items.Add(new ImageRepresenter(CurrentFile));
-
-            ImageList = new List<string> { CurrentFile };
+                ListViewHandledImages.Items.Clear();
+                ListViewHandledImages.Items.Add(new ImageRepresenter(CurrentFile));
+                ImageList = new List<string> { CurrentFile };
+            }          
         }
         private void ButtonHandleImages_Click(object sender, RoutedEventArgs e)
         {
-            if (ImageList.Count == 0)
+            if (ImageList.Count == 0)          
                 return;
+
             if (!CheckBoxEncodeAllFiles.IsChecked.Value)
             {
                 foreach (ImageRepresenter item in ListViewHandledImages.SelectedItems)
@@ -284,62 +299,78 @@ namespace ImageSqueezer
 
         private void ButtonTurnLeft_Click(object sender, RoutedEventArgs e)
         {
-            if(ImageOverview.Source != null)
-            {
-                var rotation = ((BitmapImage)ImageOverview.Source).Rotation;
+            ThreadPool.QueueUserWorkItem(RotateLeft);
+        }
 
-                var bitmap = new BitmapImage();
-                bitmap.BeginInit();
-                bitmap.UriSource = ((BitmapImage)ImageOverview.Source).UriSource;
-                bitmap.BaseUri = ((BitmapImage)ImageOverview.Source).BaseUri;
-                switch (rotation)
+        private void RotateLeft(object sender)
+        {
+            Dispatcher.BeginInvoke((Action)(() =>
+            {
+                if (ImageOverview.Source != null)
                 {
-                    case Rotation.Rotate0:
-                        bitmap.Rotation = Rotation.Rotate90;
-                        break;
-                    case Rotation.Rotate90:
-                        bitmap.Rotation = Rotation.Rotate180;
-                        break;
-                    case Rotation.Rotate180:
-                        bitmap.Rotation = Rotation.Rotate270;
-                        break;
-                    case Rotation.Rotate270:
-                        bitmap.Rotation = Rotation.Rotate0;
-                        break;
+                    var rotation = ((BitmapImage)ImageOverview.Source).Rotation;
+
+                    var bitmap = new BitmapImage();
+                    bitmap.BeginInit();
+                    bitmap.UriSource = ((BitmapImage)ImageOverview.Source).UriSource;
+                    bitmap.BaseUri = ((BitmapImage)ImageOverview.Source).BaseUri;
+                    switch (rotation)
+                    {
+                        case Rotation.Rotate0:
+                            bitmap.Rotation = Rotation.Rotate90;
+                            break;
+                        case Rotation.Rotate90:
+                            bitmap.Rotation = Rotation.Rotate180;
+                            break;
+                        case Rotation.Rotate180:
+                            bitmap.Rotation = Rotation.Rotate270;
+                            break;
+                        case Rotation.Rotate270:
+                            bitmap.Rotation = Rotation.Rotate0;
+                            break;
+                    }
+                    bitmap.EndInit();
+                    ImageOverview.Source = bitmap;
                 }
-                bitmap.EndInit();
-                ImageOverview.Source = bitmap;
-            }
+            }));
         }
 
         private void ButtonTurnRight_Click(object sender, RoutedEventArgs e)
         {
-            var rotation = ((BitmapImage)ImageOverview.Source).Rotation;
+           ThreadPool.QueueUserWorkItem(RotateRight);
+        }
 
-            if (ImageOverview.Source != null)
+        private void RotateRight(object sender)
+        {
+            Dispatcher.BeginInvoke((Action)(() =>
             {
-                var bitmap = new BitmapImage();
-                bitmap.BeginInit();
-                bitmap.UriSource = ((BitmapImage)ImageOverview.Source).UriSource;
-                bitmap.BaseUri = ((BitmapImage)ImageOverview.Source).BaseUri;
-                switch (rotation)
+                if (ImageOverview.Source != null)
                 {
-                    case Rotation.Rotate0:
-                        bitmap.Rotation = Rotation.Rotate270;
-                        break;
-                    case Rotation.Rotate90:
-                        bitmap.Rotation = Rotation.Rotate0;
-                        break;
-                    case Rotation.Rotate180:
-                        bitmap.Rotation = Rotation.Rotate90;
-                        break;
-                    case Rotation.Rotate270:
-                        bitmap.Rotation = Rotation.Rotate180;
-                        break;
+                    var rotation = ((BitmapImage)ImageOverview.Source).Rotation;
+
+                    var bitmap = new BitmapImage();
+                    bitmap.BeginInit();
+                    bitmap.UriSource = ((BitmapImage)ImageOverview.Source).UriSource;
+                    bitmap.BaseUri = ((BitmapImage)ImageOverview.Source).BaseUri;
+                    switch (rotation)
+                    {
+                        case Rotation.Rotate0:
+                            bitmap.Rotation = Rotation.Rotate270;
+                            break;
+                        case Rotation.Rotate90:
+                            bitmap.Rotation = Rotation.Rotate0;
+                            break;
+                        case Rotation.Rotate180:
+                            bitmap.Rotation = Rotation.Rotate90;
+                            break;
+                        case Rotation.Rotate270:
+                            bitmap.Rotation = Rotation.Rotate180;
+                            break;
+                    }
+                    bitmap.EndInit();
+                    ImageOverview.Source = bitmap;
                 }
-                bitmap.EndInit();
-                ImageOverview.Source = bitmap;
-            }
+            }));
         }
     }
 }
